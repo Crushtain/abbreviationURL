@@ -1,74 +1,63 @@
 package main
 
 import (
-	"github.com/gorilla/mux"
-	"io"
+	"fmt"
+	"log"
 	"net/http"
 )
 
-func getShortenURL(url string) string {
-	url = "http://veryshort.url"
-	return url
-}
-
-func shortenURLHandler(res http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodPost {
-		res.WriteHeader(http.StatusMethodNotAllowed)
-	}
-	urlBytes, err := io.ReadAll(req.Body)
-	if err != nil {
-		http.Error(res, "Bad request", http.StatusBadRequest)
-	}
-
-	url := string(urlBytes)
-
-	shortURL := getShortenURL(url)
-
-	res.Header().Set("Content-Type", "text/plain")
-	res.WriteHeader(http.StatusCreated)
-	_, err = res.Write([]byte(shortURL))
-	if err != nil {
-		http.Error(res, "No way!", http.StatusBadRequest)
-	}
-
-}
-
-func originalURLHandler(res http.ResponseWriter, req *http.Request) {
-	if req.Method != http.MethodGet {
-		http.Error(res, "No GET-method", http.StatusBadRequest)
-	}
-
-	shortURL2 := req.URL.Path[:1]
-
-	originalURL := getOriginalURL(shortURL2)
-
-	if originalURL == "" {
-		http.Error(res, "No URL", http.StatusBadRequest)
-	}
-
-	res.Header().Set("Location", originalURL)
-	res.WriteHeader(http.StatusTemporaryRedirect)
-
-}
-
-//func checkID(res http.ResponseWriter, req *http.Request) {
-//	vars = mux.Vars(req)
-//	id, ok := vars["id"]
-//}
-
-func getOriginalURL(shortURL2 string) string {
-	shortURL2 = "https://google.com"
-	return shortURL2
-}
+var shortURLs map[string]string
 
 func main() {
-	r := mux.NewRouter()
-	r.HandleFunc(`/{id}`, originalURLHandler)
-	r.HandleFunc(`/`, shortenURLHandler)
+	shortURLs = make(map[string]string)
 
-	err := http.ListenAndServe(":8080", r)
-	if err != nil {
-		panic(err)
+	http.HandleFunc("/", createShortURL)
+	http.HandleFunc("/{id}", getFullURL)
+
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func createShortURL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" || r.URL.Path != "/" {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
 	}
 
+	body := make([]byte, r.ContentLength)
+	_, err := r.Body.Read(body)
+	if err != nil {
+		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		return
+	}
+
+	fullURL := string(body)
+
+	id := generateID()
+	shortURLs[id] = fullURL
+
+	w.WriteHeader(http.StatusCreated)
+	fmt.Fprintf(w, "%s", id)
+}
+
+func getFullURL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Invalid request", http.StatusBadRequest)
+		return
+	}
+
+	id := r.URL.Path[1:]
+	fullURL, ok := shortURLs[id]
+	if !ok {
+		http.Error(w, "Short URL not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Location", fullURL)
+	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func generateID() string {
+	// generate a unique id for short URL
+	// implementation is omitted for brevity
+	return "EwHXdJfB"
 }
