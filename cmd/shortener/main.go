@@ -7,7 +7,7 @@ import (
 )
 
 func getShortenURL(url string) string {
-	url = "http://short.url"
+	url = "http://veryshort.url"
 	return url
 }
 
