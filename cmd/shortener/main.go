@@ -63,7 +63,7 @@ func getOriginalURL(shortURL2 string) string {
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc(`/{id}`, originalURLHandler)
+	r.HandleFunc(`/{id}/`, originalURLHandler)
 	r.HandleFunc(`/`, shortenURLHandler)
 
 	err := http.ListenAndServe(":8080", r)
