@@ -1,14 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"io"
 	"net/http"
 )
 
 func getShortenURL(url string) string {
-	return "http://short.urlll"
+	url = "http://short.url"
+	return url
 }
 
 func shortenURLHandler(res http.ResponseWriter, req *http.Request) {
@@ -34,7 +34,6 @@ func shortenURLHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func originalURLHandler(res http.ResponseWriter, req *http.Request) {
-	fmt.Println("fwefwefwefewf")
 	if req.Method != http.MethodGet {
 		http.Error(res, "No GET-method", http.StatusBadRequest)
 	}
@@ -58,12 +57,13 @@ func originalURLHandler(res http.ResponseWriter, req *http.Request) {
 //}
 
 func getOriginalURL(shortURL2 string) string {
-	return "https://google.com"
+	shortURL2 = "https://google.com"
+	return shortURL2
 }
 
 func main() {
 	r := mux.NewRouter()
-	r.HandleFunc(`/{id}/`, originalURLHandler)
+	r.HandleFunc(`/{id}`, originalURLHandler)
 	r.HandleFunc(`/`, shortenURLHandler)
 
 	err := http.ListenAndServe(":8080", r)
